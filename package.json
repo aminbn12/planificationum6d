@@ -9,6 +9,7 @@
     "server": "node server/index.js",
     "server:dev": "nodemon server/index.js",
     "seed": "node server/utils/seedDatabase.js",
+    "db:check": "node server/utils/checkDatabase.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
