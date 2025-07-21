@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const connectDB = require('./config/database');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -15,6 +16,9 @@ const nationalitiesRoutes = require('./routes/nationalities');
 
 // Load environment variables
 dotenv.config();
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

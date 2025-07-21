@@ -8,6 +8,7 @@
     "dev:full": "concurrently \"npm run server:dev\" \"npm run dev\"",
     "server": "node server/index.js",
     "server:dev": "nodemon server/index.js",
+    "seed": "node server/utils/seedDatabase.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

@@ -1,34 +1,9 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { authenticateToken } = require('../middleware/auth');
+const User = require('../models/User');
 
 const router = express.Router();
-
-// Mock database - In production, use a real database
-let users = [
-  { 
-    id: 1, 
-    name: 'Dr. Ahmed Ben Ali', 
-    email: 'admin@um6d.ma', 
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-    role: 'admin' 
-  },
-  { 
-    id: 2, 
-    name: 'Prof. Sarah Martin', 
-    email: 'prof@um6d.ma', 
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-    role: 'professor' 
-  },
-  { 
-    id: 3, 
-    name: 'Marie Dupont', 
-    email: 'student@um6d.ma', 
-    password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
-    role: 'student' 
-  }
-];
 
 // Login
 router.post('/login', async (req, res) => {
@@ -39,12 +14,12 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const user = users.find(u => u.email === email);
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -55,8 +30,7 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    const { password: _, ...userWithoutPassword } = user;
-    
+    // toJSON method already removes password
     res.json({
       message: 'Login successful',
       token,
@@ -77,34 +51,30 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Name, email, and password are required' });
     }
 
-    const existingUser = users.find(u => u.email === email);
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ message: 'User already exists' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = {
-      id: users.length + 1,
+    const newUser = new User({
       name,
       email,
-      password: hashedPassword,
+      password,
       role
-    };
+    });
 
-    users.push(newUser);
+    await newUser.save();
 
     const token = jwt.sign(
-      { id: newUser.id, email: newUser.email, role: newUser.role },
+      { id: newUser._id, email: newUser.email, role: newUser.role },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '24h' }
     );
 
-    const { password: _, ...userWithoutPassword } = newUser;
-    
     res.status(201).json({
       message: 'User created successfully',
       token,
-      user: userWithoutPassword
+      user: newUser
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -114,13 +84,12 @@ router.post('/register', async (req, res) => {
 
 // Get current user
 router.get('/me', authenticateToken, (req, res) => {
-  const user = users.find(u => u.id === req.user.id);
+  const user = await User.findById(req.user.id);
   if (!user) {
     return res.status(404).json({ message: 'User not found' });
   }
 
-  const { password: _, ...userWithoutPassword } = user;
-  res.json(userWithoutPassword);
+  res.json(user);
 });
 
 // Refresh token
