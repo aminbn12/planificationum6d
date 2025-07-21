@@ -17,6 +17,13 @@ const nationalitiesRoutes = require('./routes/nationalities');
 // Load environment variables
 dotenv.config();
 
+// Vérifier que MONGODB_URI est défini
+if (!process.env.MONGODB_URI) {
+  console.error('❌ MONGODB_URI n\'est pas défini dans le fichier .env');
+  console.log('📝 Créez un fichier .env avec votre URI MongoDB Atlas');
+  process.exit(1);
+}
+
 // Connect to MongoDB
 connectDB();
 

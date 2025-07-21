@@ -10,6 +10,7 @@
     "server:dev": "nodemon server/index.js",
     "seed": "node server/utils/seedDatabase.js",
     "db:check": "node server/utils/checkDatabase.js",
+    "db:test": "node server/utils/testConnection.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
